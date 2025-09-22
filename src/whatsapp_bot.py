@@ -102,6 +102,10 @@ class WhatsAppBot:
             user_info = self.db.get_user_info(phone_number)
             user_name = user_info.get('name', 'there') if user_info else 'there'
             
+            # Debug: Check if enhanced_ai is available
+            if not hasattr(self, 'enhanced_ai'):
+                return f"Error: Enhanced AI not initialized. Available attributes: {list(self.__dict__.keys())}"
+            
             # Use enhanced AI to analyze any type of message
             response = self.enhanced_ai.analyze_message(message, user_name)
             
@@ -112,7 +116,7 @@ class WhatsAppBot:
             
         except Exception as e:
             logger.error(f"Error in message analysis: {str(e)}", exc_info=True)
-            return f"I'm having trouble processing your message right now. Error: {str(e)[:100]}. Please try again or contact support if the issue persists."
+            return f"Debug Error: {str(e)}"
     
     def _get_welcome_message(self) -> str:
         """Get welcome message for new users"""
@@ -230,6 +234,16 @@ try:
 except Exception as e:
     logger.error(f"Failed to initialize WhatsApp bot: {str(e)}")
     bot = None
+
+@app.route('/', methods=['GET'])
+def health_check():
+    """Health check endpoint"""
+    return jsonify({
+        "status": "healthy",
+        "service": "WhatsApp AI Bot",
+        "version": "2.0 with Gemini",
+        "endpoints": ["/webhook", "/test"]
+    })
 
 @app.route('/test', methods=['GET'])
 def test_endpoint():
