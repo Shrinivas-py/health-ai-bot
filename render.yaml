@@ -1,0 +1,17 @@
+version: "1"
+services:
+  - type: web
+    name: health-ai-bot
+    runtime: python3
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: python src/whatsapp_bot.py
+    envVars:
+      - key: FLASK_DEBUG
+        value: "False"
+      - key: PORT
+        fromService:
+          type: web
+          name: health-ai-bot
+          property: port
+    healthCheckPath: /health
