@@ -4,7 +4,13 @@ Combines health-specific analysis with general AI capabilities
 """
 import os
 import logging
-import google.generativeai as genai
+try:
+    import google.generativeai as genai
+    GEMINI_AVAILABLE = True
+except ImportError:
+    GEMINI_AVAILABLE = False
+    logging.warning("google.generativeai not available - falling back to health-only mode")
+
 from typing import Optional, Dict, Any
 from .health_ai import HealthAI, SymptomAnalysis
 
@@ -19,7 +25,7 @@ class EnhancedAI:
         self.gemini_api_key = gemini_api_key or os.getenv('GEMINI_API_KEY')
         
         # Initialize Gemini
-        if self.gemini_api_key:
+        if self.gemini_api_key and GEMINI_AVAILABLE:
             try:
                 genai.configure(api_key=self.gemini_api_key)
                 self.gemini_model = genai.GenerativeModel('gemini-1.5-flash')
@@ -30,7 +36,10 @@ class EnhancedAI:
                 self.gemini_available = False
         else:
             self.gemini_available = False
-            logger.warning("No Gemini API key provided - using health analysis only")
+            if not GEMINI_AVAILABLE:
+                logger.warning("Gemini library not available - using health analysis only")
+            else:
+                logger.warning("No Gemini API key provided - using health analysis only")
     
     def is_health_related(self, message: str) -> bool:
         """Determine if a message is health-related"""

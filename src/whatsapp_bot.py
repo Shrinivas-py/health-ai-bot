@@ -111,8 +111,8 @@ class WhatsAppBot:
             return response
             
         except Exception as e:
-            logger.error(f"Error in message analysis: {str(e)}")
-            return "I'm having trouble processing your message right now. Please try again or contact support if the issue persists."
+            logger.error(f"Error in message analysis: {str(e)}", exc_info=True)
+            return f"I'm having trouble processing your message right now. Error: {str(e)[:100]}. Please try again or contact support if the issue persists."
     
     def _get_welcome_message(self) -> str:
         """Get welcome message for new users"""
@@ -230,6 +230,38 @@ try:
 except Exception as e:
     logger.error(f"Failed to initialize WhatsApp bot: {str(e)}")
     bot = None
+
+@app.route('/test', methods=['GET'])
+def test_endpoint():
+    """Test endpoint to verify bot functionality"""
+    try:
+        # Test health question
+        health_response = bot.enhanced_ai.analyze_message("I have a headache", "TestUser")
+        
+        # Test general question  
+        general_response = bot.enhanced_ai.analyze_message("Tell me a joke", "TestUser")
+        
+        # Test Gemini connection
+        gemini_test = bot.enhanced_ai.test_gemini_connection()
+        
+        return jsonify({
+            "status": "success",
+            "health_test": health_response[:100] + "..." if len(health_response) > 100 else health_response,
+            "general_test": general_response[:100] + "..." if len(general_response) > 100 else general_response,
+            "gemini_status": gemini_test,
+            "environment": {
+                "gemini_key_present": bool(os.getenv('GEMINI_API_KEY')),
+                "gemini_available": bot.enhanced_ai.gemini_available
+            }
+        })
+    except Exception as e:
+        return jsonify({
+            "status": "error",
+            "error": str(e),
+            "environment": {
+                "gemini_key_present": bool(os.getenv('GEMINI_API_KEY'))
+            }
+        }), 500
 
 @app.route('/webhook', methods=['POST'])
 def webhook():
