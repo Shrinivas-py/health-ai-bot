@@ -327,7 +327,7 @@ def send_message():
         return jsonify({'error': str(e)}), 500
 
 @app.route('/health', methods=['GET'])
-def health_check():
+def health_status():
     """Health check endpoint"""
     return jsonify({
         'status': 'healthy',
