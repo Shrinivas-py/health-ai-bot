@@ -3,7 +3,12 @@ WhatsApp Bot Integration using Twilio
 Handles incoming WhatsApp messages and sends AI-generated responses
 """
 import os
+import sys
 import logging
+
+# Add the project root to Python path for imports
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from flask import Flask, request, jsonify
 from twilio.rest import Client
 from twilio.twiml.messaging_response import MessagingResponse
