@@ -13,7 +13,7 @@ from flask import Flask, request, jsonify
 from twilio.rest import Client
 from twilio.twiml.messaging_response import MessagingResponse
 from twilio.base.exceptions import TwilioException
-from src.health_ai import HealthAI
+from src.gemini_ai import EnhancedAI
 from src.database import DatabaseManager
 from src.utils import setup_logging
 from datetime import datetime
@@ -39,7 +39,7 @@ class WhatsAppBot:
         self.client = Client(self.account_sid, self.auth_token)
         
         # Initialize AI and database
-        self.health_ai = HealthAI()
+        self.enhanced_ai = EnhancedAI()
         self.db = DatabaseManager()
         
         # User session management
@@ -92,42 +92,42 @@ class WhatsAppBot:
         if any(emergency in message_lower for emergency in ['emergency', '911', 'urgent']):
             return self._get_emergency_message()
         
-        # Handle symptom analysis (default)
-        return self._analyze_symptoms(phone_number, message)
+        # Handle symptom analysis and general questions (default)
+        return self._analyze_message(phone_number, message)
     
-    def _analyze_symptoms(self, phone_number: str, message: str) -> str:
-        """Analyze symptoms using AI"""
+    def _analyze_message(self, phone_number: str, message: str) -> str:
+        """Analyze message using enhanced AI (health + general)"""
         try:
             # Get user info
             user_info = self.db.get_user_info(phone_number)
             user_name = user_info.get('name', 'there') if user_info else 'there'
             
-            # Analyze symptoms
-            analysis = self.health_ai.analyze_message(message)
+            # Use enhanced AI to analyze any type of message
+            response = self.enhanced_ai.analyze_message(message, user_name)
             
-            # Format response
-            response = self.health_ai.format_response(analysis, user_name)
-            
-            # Store analysis in database
-            self.db.store_analysis(phone_number, message, analysis)
+            # Store interaction in database (for both health and general)
+            self.db.store_message(phone_number, f"AI Response: {response[:100]}...", 'analysis')
             
             return response
             
         except Exception as e:
-            logger.error(f"Error in symptom analysis: {str(e)}")
-            return "I'm having trouble analyzing your symptoms right now. Please try rephrasing your message or contact a healthcare provider if it's urgent."
+            logger.error(f"Error in message analysis: {str(e)}")
+            return "I'm having trouble processing your message right now. Please try again or contact support if the issue persists."
     
     def _get_welcome_message(self) -> str:
         """Get welcome message for new users"""
-        return """👋 Welcome to your AI Health Assistant!
+        return """👋 Welcome to your AI Assistant!
 
-I'm here to help you understand your symptoms and provide general health guidance.
+I'm here to help you with:
+🩺 Health questions and symptom analysis
+🤖 General questions and advice
+💡 Tips and guidance on any topic
 
-🔹 Tell me about your symptoms
-🔹 Ask for health tips
+🔹 Ask me about your health concerns
+🔹 Ask me general questions (weather, advice, etc.)
 🔹 Type 'help' for more options
 
-⚠️ IMPORTANT: I'm not a replacement for professional medical care. For emergencies, call 911 immediately.
+⚠️ IMPORTANT: For medical emergencies, call 911 immediately.
 
 How can I help you today?"""
     
@@ -135,34 +135,38 @@ How can I help you today?"""
         """Get help message with available options"""
         return """🆘 How I can help you:
 
-1. 🩺 **Symptom Analysis**
-   Just describe how you're feeling, and I'll provide insights and recommendations.
+1. 🩺 **Health & Medical Questions**
+   Describe your symptoms for personalized health guidance
 
-2. 💡 **Health Tips**
+2. 🤖 **General AI Assistant**
+   Ask me anything! I can help with advice, questions, explanations, and more
+
+3. 💡 **Health Tips**
    Type 'tips' for general health advice
 
-3. 🚨 **Emergencies**
+4. 🚨 **Emergencies**
    For medical emergencies, call 911 immediately
 
 **Example messages:**
 • "I have a headache and feel nauseous"
-• "My throat is sore and I'm coughing"
+• "What's the weather like today?"
+• "Tell me a joke"
+• "How do I cook pasta?"
 • "Give me some health tips"
 
-Remember: This is for informational purposes only. Always consult healthcare professionals for medical concerns."""
+I'm powered by advanced AI and can help with both medical and general questions!"""
     
     def _get_health_tips(self) -> str:
         """Get general health tips"""
-        tips = self.health_ai.get_health_tips()
-        tips_text = "\n".join([f"• {tip}" for tip in tips[:5]])  # Limit to 5 tips
+        tips = self.enhanced_ai.get_health_tips()
         
         return f"""💡 Daily Health Tips:
 
-{tips_text}
+{tips}
 
 Remember: Small daily habits make a big difference in your overall health! 
 
-Need help with specific symptoms? Just describe how you're feeling."""
+Need help with specific symptoms or have other questions? Just ask me anything!"""
     
     def _get_emergency_message(self) -> str:
         """Get emergency response message"""

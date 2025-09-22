@@ -7,6 +7,9 @@ requests==2.32.3
 # Lightweight AI dependencies (no heavy ML libraries for simple bot)
 numpy==2.3.1
 
+# Google Gemini AI
+google-generativeai==0.8.3
+
 # Database
 sqlalchemy==2.0.36
 
