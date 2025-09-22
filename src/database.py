@@ -50,7 +50,7 @@ class DatabaseManager:
                     user_id INTEGER,
                     phone_number TEXT NOT NULL,
                     message_body TEXT NOT NULL,
-                    message_type TEXT NOT NULL CHECK(message_type IN ('incoming', 'outgoing')),
+                    message_type TEXT NOT NULL CHECK(message_type IN ('incoming', 'outgoing', 'analysis')),
                     timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     FOREIGN KEY (user_id) REFERENCES users (id)
                 )

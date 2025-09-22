@@ -102,21 +102,14 @@ class WhatsAppBot:
             user_info = self.db.get_user_info(phone_number)
             user_name = user_info.get('name', 'there') if user_info else 'there'
             
-            # Debug: Check if enhanced_ai is available
-            if not hasattr(self, 'enhanced_ai'):
-                return f"Error: Enhanced AI not initialized. Available attributes: {list(self.__dict__.keys())}"
-            
             # Use enhanced AI to analyze any type of message
             response = self.enhanced_ai.analyze_message(message, user_name)
-            
-            # Store interaction in database (for both health and general)
-            self.db.store_message(phone_number, f"AI Response: {response[:100]}...", 'analysis')
             
             return response
             
         except Exception as e:
             logger.error(f"Error in message analysis: {str(e)}", exc_info=True)
-            return f"Debug Error: {str(e)}"
+            return "I'm having trouble processing your message right now. Please try again in a moment!"
     
     def _get_welcome_message(self) -> str:
         """Get welcome message for new users"""
